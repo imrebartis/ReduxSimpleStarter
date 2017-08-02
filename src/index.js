@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import YTSearch from 'youtube-api-search';
@@ -11,19 +12,34 @@ class App extends Component {
   constructor(props) {
     super(props);
 
-    this.state = { videos: [] };
+    this.state = { 
+        videos: [],
+        selectedVideo: null
+     };
+    
+     this.videoSearch('Dead Can Dance');
+  }
 
-    YTSearch({key: API_KEY, term: 'Dead Can Dance'}, (videos) => {
-      this.setState({ videos });
+  videoSearch(term) {
+    YTSearch({key: API_KEY, term: term}, (videos) => {
+      this.setState({
+        videos: videos,
+        selectedVideo: videos[0]
+      });
     });
   }
 
   render() {
+    // the videoSearch function will run only every 300 milliseconds
+    const videoSearch = _.debounce((term) => { this.videoSearch(term) }, 300);
+
     return (
       <div>
-        <SearchBar />
-        <VideoDetail video={this.state.videos[0]} />
-        <VideoList videos={this.state.videos} />
+        <SearchBar onSearchTermChange={videoSearch}/>
+        <VideoDetail video={this.state.selectedVideo} />
+        <VideoList
+          onVideoSelect={selectedVideo => this.setState({selectedVideo}) }
+          videos={this.state.videos} />
       </div>
     );
   }
@@ -32,7 +48,4 @@ class App extends Component {
 
 // take this component's generated HTML
 // & put it into the DOM
-ReactDOM.render(
-
-    <App />, document.querySelector('.container')
-);
+ReactDOM.render(<App />, document.querySelector('.container'));
